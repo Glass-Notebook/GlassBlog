@@ -125,7 +125,7 @@ end
 
 # ╔═╡ e811df6b-752d-41e9-9eb3-8b3ecbed1416
 let
-	p = plot(title="DataFrame packages", xticks=xticks, legend=:outerbottomright)
+	p = plot(title="Packages for data analysis", xticks=xticks, legend=:outerbottomright)
 	for pkgname in ["CSV", "Plots", "DataFrames", "StatsPlots"]
 		df = pkg_downloads_by_date[Dict("package_name" => pkgname)]
 		@df df plot!(p, :date, :downloads, label=pkgname, markershape=:x)
@@ -197,16 +197,6 @@ let
 			df = pkg_downloads_by_date[Dict("package_name" => pkgname)]
 			@df df plot!(p, :date, :downloads, label=pkgname, markershape=:x)
 		end
-	end
-	p
-end
-
-# ╔═╡ a0c6edb5-f65f-44e4-85f6-b237a8061550
-let
-	p = plot(title="PythonCall backend packages", xticks=xticks, legend=:outerbottomright)
-	for pkgname in ["PythonCall", "PythonPlot"]
-		df = pkg_downloads_by_date[Dict("package_name" => pkgname)]
-		@df df plot!(p, :date, :downloads, label=pkgname, markershape=:x)
 	end
 	p
 end
@@ -1940,7 +1930,6 @@ version = "1.4.1+1"
 # ╠═653c781b-5062-40a6-8e16-171353e25dbc
 # ╠═e811df6b-752d-41e9-9eb3-8b3ecbed1416
 # ╠═08d07599-3cd7-412b-b9dc-7b51f6a1a9cb
-# ╠═a0c6edb5-f65f-44e4-85f6-b237a8061550
 # ╠═2ec27be1-c1d7-4f77-a827-6ce7e3b59e61
 # ╠═beb1f047-3b9a-444c-8907-d3b8a6cac49a
 # ╟─00000000-0000-0000-0000-000000000001
