@@ -188,7 +188,7 @@ let
 
 	p = plot(
 		title="Packages depends on CondaPkg/PythonCall", 
-		size=(1000, 500), xticks=xticks, legend=:outerbottomright
+		xticks=xticks, legend=:outerbottomright
 	)
 
 
