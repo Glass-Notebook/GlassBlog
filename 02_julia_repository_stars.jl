@@ -72,21 +72,44 @@ function get_star_records(
 	return stars_per_date
 end
 
-# ╔═╡ 1288bc24-e889-4735-8764-f63674a62c19
+# ╔═╡ 955b1d7f-ab69-4d0b-b2d9-4c4b68e2f32b
 begin
+	@userplot StarHistory
+
+	@recipe function f(h::StarHistory)
+			repo_owner = h.args[1]
+			repo_name = h.args[2]
+			title --> "Star history"
+			label := "$(repo_owner)/$(repo_name)"
+			stars_per_date = get_star_records(repo_owner, repo_name)
+			xs = sort(collect(keys(stars_per_date)))
+			ys = cumsum([stars_per_date[dt] for dt in xs])
+			(xs, ys)
+	end
+end
+
+# ╔═╡ 2884dae7-8b1b-4e53-b97d-970f0f7bf174
+let
+	p = plot()
 	repo_owner = "akio-tomiya"
 	repo_name = "LatticeQCD.jl"
+	starhistory!(p, repo_owner, repo_name)
+end
+
+# ╔═╡ 37a584c1-7841-44f7-976f-7b62b1734ea6
+let
+	p = plot()
 	#repo_owner = "JuliaLang"
 	#repo_name = "julia"
+	#starhistory!(p, repo_owner, repo_name)
 
-	stars_per_date = get_star_records(repo_owner, repo_name)
-	xs = sort(collect(keys(stars_per_date)))
-	ys = cumsum([stars_per_date[dt] for dt in xs])
-	plot(xs, ys, 
-		title="$(repo_owner)/$(repo_name)", 
-		label="star history",
-		size=(800, 500)
-	)
+	repo_owner = "JuliaLang"
+	repo_name = "IJulia.jl"
+	starhistory!(p, repo_owner, repo_name)
+
+	repo_owner = "fonsp"
+	repo_name = "Pluto.jl"
+	starhistory!(p, repo_owner, repo_name)
 end
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
@@ -1169,6 +1192,8 @@ version = "1.4.1+1"
 # ╠═fef041d4-e30f-418a-bd7c-8545ebb43640
 # ╠═e208021b-0a88-4fa4-a0cf-2f212dddc1cd
 # ╠═1db0747f-3093-480b-981b-761f19b5d266
-# ╠═1288bc24-e889-4735-8764-f63674a62c19
+# ╠═955b1d7f-ab69-4d0b-b2d9-4c4b68e2f32b
+# ╠═2884dae7-8b1b-4e53-b97d-970f0f7bf174
+# ╠═37a584c1-7841-44f7-976f-7b62b1734ea6
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
