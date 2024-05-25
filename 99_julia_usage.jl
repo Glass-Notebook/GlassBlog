@@ -9,19 +9,30 @@ using InteractiveUtils
 
 # ╔═╡ 27b6ab17-1ae8-4110-bcee-d821a0b8b304
 begin
+	using Downloads: download
 	using TOML
-	using Dates: Dates, Date, Year, Month, dayofweek
+	using Dates: DateTime, Dates, Date, Year, Month, dayofweek, year, month
 	using Pkg
 	using UUIDs: UUID
-	
-	using StatsPlots
+
 	using CSV: CSV
 	using DataFrames
-	using Downloads: download
+	using HTTP: request
+	using JSON
+	using Plots
+	using StatsPlots
 end
 
 # ╔═╡ 6c62b1da-fdb1-11ee-153f-4ffbd6c58334
 using PlutoUI: TableOfContents
+
+# ╔═╡ 46b4cb42-d431-437d-b8af-a4a9ef8be4c9
+begin
+	using DotEnv
+	# https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#creating-a-fine-grained-personal-access-token
+	# store "GITHUB_TOKEN=github_pat_xxxxxx" in `.env` as necessary
+	DotEnv.load!()
+end
 
 # ╔═╡ 2a0aac5a-593c-4dfe-b049-39d91a93b97e
 md"""
@@ -280,31 +291,113 @@ end
 # ╔═╡ ea45af66-47f0-4fcb-99fa-86ab2af55c90
 md"""
 # Stars
+
+The number of stars in a GitHub repository can be used to estimate the popularity of that repository. We can gather star count using GitHub API.
 """
 
 # ╔═╡ 5a211a9f-9ef0-46f0-b05c-8e2fe3287986
-
+function get_repo_stargazers(repo_owner, repo_name, page, per_page)
+	url = "https://api.github.com/repos/$repo_owner/$repo_name/stargazers?page=$page&per_page=$per_page"
+	headers = [
+		"Accept" => "application/vnd.github.v3.star+json",
+		"Authorization" => isnothing(get(ENV, "GITHUB_TOKEN", nothing)) ? "" : "Bearer $(ENV["GITHUB_TOKEN"])",
+		"X-GitHub-Api-Version" => "2022-11-28",
+	]
+	response = request("GET", url, headers)
+	return response
+end
 
 # ╔═╡ 1024031b-d375-4f27-bc6b-bc439752cb17
-
+#=
+The implementation is inspired by https://github.com/star-history/star-history
+=#
+function get_star_records(
+	repo_owner, repo_name; max_request_amount::Union{Int, Nothing}=nothing)
+	page = 1
+	per_page = 100
+	
+	response = get_repo_stargazers(repo_owner, repo_name, page, per_page)
+	headerLink = get(Dict(response.headers), "Link", "")
+	regResult = match(r"next.*page=(\d*)&per_page.*last", headerLink)
+	
+	pagecount = isnothing(regResult) ? 1 : parse(Int, regResult[1])
+	stars_per_date = Dict()
+	maxpagecount = if isnothing(max_request_amount) || max_request_amount < 0
+		pagecount
+	else
+		min(pagecount, max_request_amount)
+	end
+	bodies = Vector{Any}(undef, maxpagecount)
+	Base.Threads.@threads for page in 1:maxpagecount
+		response = get_repo_stargazers(repo_owner, repo_name, page, per_page)
+		if response.status == 200
+			body = JSON.parse(String(response.body))
+			bodies[page] = body
+		else
+			bodies[page] = Any[]
+		end
+	end
+	for body in bodies
+		for b in body
+			starred_at = b["starred_at"]
+			dt = DateTime(starred_at, "yyyy-mm-ddTHH:MM:SZ")
+			y = dt |> year
+			m = dt |> month
+			k = DateTime(y, m)
+			stars_per_date[k] = get(stars_per_date, k, 0) + 1
+		end
+	end
+	return stars_per_date
+end
 
 # ╔═╡ 8410255d-d3c6-4644-b7c5-493fd5b6fbf2
+begin
+	@userplot StarHistory
 
+	@recipe function f(h::StarHistory)
+			repo_owner = h.args[1]
+			repo_name = h.args[2]
+			title --> "Star history"
+			label := "$(repo_owner)/$(repo_name)"
+			stars_per_date = get_star_records(repo_owner, repo_name)
+			xs = sort(collect(keys(stars_per_date)))
+			ys = cumsum([stars_per_date[dt] for dt in xs])
+			(xs, ys)
+	end
+end
 
 # ╔═╡ 1bf617b4-331d-4644-ab67-abe6f61d48b5
+md"""
+Example.jl is a good example of showing star history
+"""
 
+# ╔═╡ 1655d60f-e369-4482-a74e-6a92d6aa9889
+let
+	p = plot()
+	repo_owner = "JuliaLang"
+	repo_name = "Example.jl"
+	starhistory!(p, repo_owner, repo_name)
+end
+
+# ╔═╡ 67c7d1c8-57e9-42f1-b7c9-e70529f5b9b3
+md"""
+To track the history of GitHub stars, we need to make numerous API calls to GitHub. 
+Therefore, users running this notebook will require an access token. See [this documentation](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#creating-a-fine-grained-personal-access-token).
+"""
 
 # ╔═╡ 5d59a644-9c10-4319-ac05-07ee628fd5a5
-
-
-# ╔═╡ e04f55c2-cc45-4f56-a705-9232575d1ceb
-
-
-# ╔═╡ 9e2b9ae2-5c3e-4874-8d67-5365edeb11af
-
-
-# ╔═╡ 2ba3d5c6-5673-41b0-bcd4-ca4af1b77e32
-
+let
+	if haskey(ENV, "GITHUB_TOKEN")
+		p = plot()
+		repo_owner = "JuliaLang"
+		repo_name = "IJulia.jl"
+		starhistory!(p, repo_owner, repo_name)
+	
+		repo_owner = "fonsp"
+		repo_name = "Pluto.jl"
+		starhistory!(p, repo_owner, repo_name)
+	end
+end
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -312,8 +405,12 @@ PLUTO_PROJECT_TOML_CONTENTS = """
 CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
+DotEnv = "4dc1fcf4-5e3b-5448-94ab-0c38ec0385c1"
 Downloads = "f43a241f-c20a-4ad4-852c-f6b1247861c6"
+HTTP = "cd3eb016-35fb-5094-929b-558a96fad6f3"
+JSON = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"
 Pkg = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
+Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 StatsPlots = "f3b207a7-027a-5e70-b257-86293d7955fd"
 TOML = "fa267f1f-6049-4f14-aa54-33bafae1ed76"
@@ -322,6 +419,10 @@ UUIDs = "cf7118a7-6976-5b1a-9a39-7adc72f591a4"
 [compat]
 CSV = "~0.10.14"
 DataFrames = "~1.6.1"
+DotEnv = "~1.0.0"
+HTTP = "~1.10.8"
+JSON = "~0.21.4"
+Plots = "~1.40.1"
 PlutoUI = "~0.7.58"
 StatsPlots = "~0.15.7"
 """
@@ -332,7 +433,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.10.3"
 manifest_format = "2.0"
-project_hash = "8710dd448a14ced18a82b444bd94cadc0d372dd6"
+project_hash = "a0ddb9c880854f2d0d3ef0930b44505f4028a751"
 
 [[deps.AbstractFFTs]]
 deps = ["LinearAlgebra"]
@@ -579,6 +680,12 @@ deps = ["LibGit2"]
 git-tree-sha1 = "2fb1e02f2b635d0845df5d7c167fec4dd739b00d"
 uuid = "ffbed154-4ef7-542d-bbb7-c09d3a79fcae"
 version = "0.9.3"
+
+[[deps.DotEnv]]
+deps = ["PrecompileTools"]
+git-tree-sha1 = "92e88cb68a5b10545234f46dfaeb2fa8a8a50c45"
+uuid = "4dc1fcf4-5e3b-5448-94ab-0c38ec0385c1"
+version = "1.0.0"
 
 [[deps.Downloads]]
 deps = ["ArgTools", "FileWatching", "LibCURL", "NetworkOptions"]
@@ -1840,6 +1947,7 @@ version = "1.4.1+1"
 # ╟─8d699e2f-1ddb-4d7d-bff1-b48e19efe4ea
 # ╟─ee698a08-7a17-4fff-95fc-5185a031412b
 # ╠═27b6ab17-1ae8-4110-bcee-d821a0b8b304
+# ╠═46b4cb42-d431-437d-b8af-a4a9ef8be4c9
 # ╟─7995f0a3-a191-490f-ad4b-f0f0b013fd77
 # ╠═0c683de3-eddf-43ea-81b4-7093e83dd32e
 # ╠═46cfad45-ef6e-4844-a3c5-e8f5d79fd7a8
@@ -1862,10 +1970,9 @@ version = "1.4.1+1"
 # ╠═5a211a9f-9ef0-46f0-b05c-8e2fe3287986
 # ╠═1024031b-d375-4f27-bc6b-bc439752cb17
 # ╠═8410255d-d3c6-4644-b7c5-493fd5b6fbf2
-# ╠═1bf617b4-331d-4644-ab67-abe6f61d48b5
+# ╟─1bf617b4-331d-4644-ab67-abe6f61d48b5
+# ╠═1655d60f-e369-4482-a74e-6a92d6aa9889
+# ╟─67c7d1c8-57e9-42f1-b7c9-e70529f5b9b3
 # ╠═5d59a644-9c10-4319-ac05-07ee628fd5a5
-# ╠═e04f55c2-cc45-4f56-a705-9232575d1ceb
-# ╠═9e2b9ae2-5c3e-4874-8d67-5365edeb11af
-# ╠═2ba3d5c6-5673-41b0-bcd4-ca4af1b77e32
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
