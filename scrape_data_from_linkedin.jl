@@ -79,6 +79,23 @@ begin
 	nothing
 end
 
+# ╔═╡ 98952a53-3eff-4fd0-aff2-82329889f4c5
+begin
+	target_li_elements = get_job_list(htmlelement_body)
+	ui_index = @bind index Select(collect(keys(target_li_elements)))
+	nothing
+end
+
+# ╔═╡ 0d8607a2-6f63-499a-802b-4f2a3458d792
+md"""
+You've found $(length(target_li_elements)) job oppotunities.
+"""
+
+# ╔═╡ 9b11b02b-d8b3-4357-b1e0-723310c2b3bd
+md"""
+$(ui_index)
+"""
+
 # ╔═╡ 54323818-4cba-4f44-9d32-8f39c511c008
 """
 	get_job_list(htmlelement_body)
@@ -122,28 +139,13 @@ function get_job_list(htmlelement_body)
 	return target_li_elements
 end
 
-# ╔═╡ 98952a53-3eff-4fd0-aff2-82329889f4c5
-begin
-	target_li_elements = get_job_list(htmlelement_body)
-	ui_index = @bind index Select(collect(keys(target_li_elements)))
-	li_elem = target_li_elements[index];
-	nothing
-end
-
-# ╔═╡ 0d8607a2-6f63-499a-802b-4f2a3458d792
-md"""
-You've found $(length(target_li_elements)) job oppotunities.
-"""
-
-# ╔═╡ 9b11b02b-d8b3-4357-b1e0-723310c2b3bd
-md"""
-$(ui_index)
-"""
-
 # ╔═╡ 79bb3079-e344-4bb4-aed9-d9dcf0e79705
 md"""
 Here, `target_li_elements = get_job_list(htmlelement_body)` contains lots of useful information such as "link to description", "company name", "job title", "modified date".
 """
+
+# ╔═╡ e75f0ae3-b7a2-4b8a-9d70-b151066c6373
+li_elem = target_li_elements[index];
 
 # ╔═╡ 51a749e9-ea58-428f-b8c7-c68716c5e804
 begin
@@ -583,7 +585,7 @@ version = "17.4.0+2"
 # ╟─aa8badc3-95d9-4a3b-beb5-dfb94c7baa34
 # ╟─b610028a-0066-4310-82c0-4d17472054e5
 # ╟─98952a53-3eff-4fd0-aff2-82329889f4c5
-# ╟─0d8607a2-6f63-499a-802b-4f2a3458d792
+# ╠═0d8607a2-6f63-499a-802b-4f2a3458d792
 # ╟─9b11b02b-d8b3-4357-b1e0-723310c2b3bd
 # ╟─622f778f-3aad-4029-b69f-719ad8f76214
 # ╟─7e0f8ad6-554d-470a-a20a-f62cb76ee43f
@@ -591,6 +593,7 @@ version = "17.4.0+2"
 # ╠═49903ea0-ae46-4da8-afa5-97f234cfc048
 # ╠═54323818-4cba-4f44-9d32-8f39c511c008
 # ╟─79bb3079-e344-4bb4-aed9-d9dcf0e79705
+# ╠═e75f0ae3-b7a2-4b8a-9d70-b151066c6373
 # ╠═51a749e9-ea58-428f-b8c7-c68716c5e804
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
