@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.40
+# v0.19.43
 
 using Markdown
 using InteractiveUtils
@@ -41,6 +41,22 @@ end
 # ╔═╡ e182b627-a743-43c8-b3b5-e17bcfb8270b
 using PlutoUI
 
+# ╔═╡ 52a68121-06b7-41f4-93b9-e4ff52303dc9
+md"""
+In this notebook, we aim to collect JuliaLang's posts from LinkedIn. We utilize WebDriver.jl to automate web browser operations and sign in to LinkedIn,
+subsequently capturing the HTML elements that contain JuliaLang's posts.
+
+To set up a development environment easily, we leverage Python's `selenium` and `chromedriver-binary` packages through CondaPkg.jl.
+
+Before running this notebook, store `LINKEDIN_USERNAME` and `LINKEDIN_PASSWORD` in `.env` so that you can sign in to LinkedIn through WebDriver.jl.
+
+```
+# .env
+LINKEDIN_USERNAME="your-linkedin-username"
+LINKEDIN_PASSWORD="your-password"
+```
+"""
+
 # ╔═╡ 07e3fbd7-2059-45e0-9132-651dff7ec923
 begin
 	driver = webdriver.Chrome() # Python object
@@ -80,13 +96,15 @@ begin
 	password = Element(session, "css selector", "password")
 	login_button = Element(session, "class name", "btn__primary--large")
 	sleep(rand())
-	element_keys!(username, ENV["USERNAME"])
+	element_keys!(username, ENV["LINKEDIN_USERNAME"])
 	sleep(rand())
-	element_keys!(password, ENV["PASSWORD"])
+	element_keys!(password, ENV["LINKEDIN_PASSWORD"])
 	sleep(rand())
 	click!(login_button)
+end
 
-	sleep(rand())
+# ╔═╡ 2379fe80-88b2-4b4f-b98c-3cc831ec7d53
+begin
 	navigate!(session, "https://www.linkedin.com/company/the-julia-language/posts/")
 end
 
@@ -186,14 +204,25 @@ begin
 	extractpost(s)
 end
 
+# ╔═╡ 7280054f-c556-4b39-81e6-deb0f20ca2db
+md"""
+# References
+
+- [christophegaron's blog post: Scraping Linkedin Posts With Selenium & Beautiful Soup](https://christophegaron.com/articles/mind/automation/scraping-linkedin-posts-with-selenium-and-beautiful-soup/#google_vignette)
+- [Ron Erdos's blog post: How to scrape web pages with Julia](https://julia.school/julia/scraping/)
+"""
+
 # ╔═╡ Cell order:
+# ╟─52a68121-06b7-41f4-93b9-e4ff52303dc9
 # ╠═ea8534d0-3217-11ef-16ee-ed791b315d4e
 # ╠═e182b627-a743-43c8-b3b5-e17bcfb8270b
 # ╠═07e3fbd7-2059-45e0-9132-651dff7ec923
 # ╠═9a7e496a-8424-4920-8f71-d9ab2e00fbb4
 # ╠═ed4c1730-087e-4a6b-a3cc-60981768616c
+# ╠═2379fe80-88b2-4b4f-b98c-3cc831ec7d53
 # ╠═61278ed8-72b8-482f-84b3-fb8baa7170fc
 # ╠═81ed364a-2002-447f-a1a7-fd05405a94c3
 # ╠═5c77104f-8a49-45b9-bef5-616d4bd10afc
 # ╠═91e12d5c-e3f6-4aee-95fa-9ae8c34d9192
 # ╠═44005657-9cfb-41af-b78a-3dcc5f1b5906
+# ╟─7280054f-c556-4b39-81e6-deb0f20ca2db
