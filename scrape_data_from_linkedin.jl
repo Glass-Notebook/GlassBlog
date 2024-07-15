@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.36
+# v0.19.40
 
 using Markdown
 using InteractiveUtils
@@ -24,6 +24,9 @@ end
 # ╔═╡ ad90096e-980a-44a0-964f-f5ad546070db
 using PlutoUI
 
+# ╔═╡ 74b9737f-824a-46f2-bbbe-34774e136f88
+TableOfContents()
+
 # ╔═╡ da19ed56-b763-428b-8e7a-4cf62462caf2
 md"""
 # Find jobs mentions "Julia" in LinkedIn
@@ -40,10 +43,9 @@ md"""
 
 # ╔═╡ aa8badc3-95d9-4a3b-beb5-dfb94c7baa34
 begin
-	ui_KEYWORD = @bind KEYWORD TextField(default="Julia")
-	ui_LOCATION = @bind LOCATION TextField(default="Tokyo")
-	nothing
-end
+	ui_KEYWORD = @bind KEYWORD confirm(TextField(default="Julia"))
+	ui_LOCATION = @bind LOCATION confirm(TextField(default="USA"))
+end;
 
 # ╔═╡ b610028a-0066-4310-82c0-4d17472054e5
 md"""
@@ -78,23 +80,6 @@ begin
 	end |> first
 	nothing
 end
-
-# ╔═╡ 98952a53-3eff-4fd0-aff2-82329889f4c5
-begin
-	target_li_elements = get_job_list(htmlelement_body)
-	ui_index = @bind index Select(collect(keys(target_li_elements)))
-	nothing
-end
-
-# ╔═╡ 0d8607a2-6f63-499a-802b-4f2a3458d792
-md"""
-You've found $(length(target_li_elements)) job oppotunities.
-"""
-
-# ╔═╡ 9b11b02b-d8b3-4357-b1e0-723310c2b3bd
-md"""
-$(ui_index)
-"""
 
 # ╔═╡ 54323818-4cba-4f44-9d32-8f39c511c008
 """
@@ -137,7 +122,24 @@ function get_job_list(htmlelement_body)
 		isa(c, Gumbo.HTMLElement{:li})
 	end
 	return target_li_elements
+end;
+
+# ╔═╡ 98952a53-3eff-4fd0-aff2-82329889f4c5
+begin
+	target_li_elements = get_job_list(htmlelement_body)
+	ui_index = @bind index Select(collect(keys(target_li_elements)))
+	nothing
 end
+
+# ╔═╡ 0d8607a2-6f63-499a-802b-4f2a3458d792
+md"""
+You've found $(length(target_li_elements)) job oppotunities.
+"""
+
+# ╔═╡ 9b11b02b-d8b3-4357-b1e0-723310c2b3bd
+md"""
+$(ui_index)
+"""
 
 # ╔═╡ 79bb3079-e344-4bb4-aed9-d9dcf0e79705
 md"""
@@ -175,19 +177,23 @@ begin
 	end
 
 	function get_lastupdated(li_elem::HTMLElement{:li})
-		target_div = li_elem.children[begin].children[end]
-		div = filter(target_div.children) do c
-			isa(c, Gumbo.HTMLElement{:div})
-		end |> first
-		
-		location = div[1].children[1].text |> lstrip |> rstrip
-		lastupdated = div[3].children[1].text |> lstrip |> rstrip
+		try
+			target_div = li_elem.children[begin].children[end]
+			div = filter(target_div.children) do c
+				isa(c, Gumbo.HTMLElement{:div})
+			end |> first
+			
+			location = div[1].children[1].text |> lstrip |> rstrip
+			lastupdated = div[3].children[1].text |> lstrip |> rstrip
+		catch
+			nothing
+		end
 	end
 end
 
 # ╔═╡ 622f778f-3aad-4029-b69f-719ad8f76214
 HTML("""
-<h3>index=$(index)</h3>
+<h4>index=$(index)</h4>
 
 <li>
 Title: $(get_jobtitle(li_elem))
@@ -223,7 +229,7 @@ PlutoUI = "~0.7.59"
 PLUTO_MANIFEST_TOML_CONTENTS = """
 # This file is machine-generated - editing it directly is not advised
 
-julia_version = "1.10.3"
+julia_version = "1.10.4"
 manifest_format = "2.0"
 project_hash = "99977be56e5ce612e0e4c2c6bc916b8d8542ceec"
 
@@ -580,12 +586,13 @@ version = "17.4.0+2"
 # ╔═╡ Cell order:
 # ╠═c9cc8ad2-209b-11ef-0ca4-a31a8e4c77eb
 # ╠═ad90096e-980a-44a0-964f-f5ad546070db
+# ╠═74b9737f-824a-46f2-bbbe-34774e136f88
 # ╟─da19ed56-b763-428b-8e7a-4cf62462caf2
 # ╟─3c8bf216-0bc0-4992-8c5c-906bd2a67310
-# ╟─aa8badc3-95d9-4a3b-beb5-dfb94c7baa34
+# ╠═aa8badc3-95d9-4a3b-beb5-dfb94c7baa34
 # ╟─b610028a-0066-4310-82c0-4d17472054e5
 # ╟─98952a53-3eff-4fd0-aff2-82329889f4c5
-# ╠═0d8607a2-6f63-499a-802b-4f2a3458d792
+# ╟─0d8607a2-6f63-499a-802b-4f2a3458d792
 # ╟─9b11b02b-d8b3-4357-b1e0-723310c2b3bd
 # ╟─622f778f-3aad-4029-b69f-719ad8f76214
 # ╟─7e0f8ad6-554d-470a-a20a-f62cb76ee43f
