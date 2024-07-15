@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.36
+# v0.19.40
 
 #> [frontmatter]
 #> title = "Julia Usage/Growth"
